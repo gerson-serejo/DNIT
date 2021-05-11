@@ -1,0 +1,833 @@
+<!DOCTYPE html PUBLIC>
+
+<html>
+<head >
+<script src="https://d3js.org/d3.v6.min.js"></script>
+<script src="https://d3js.org/topojson.v1.min.js"></script>
+
+<title>DNIT-Departamento Nacional de Infraestrutura de Transporte</title>
+
+<style>
+    table {
+        width: 100px;
+        border-collapse: collapse;
+    }
+
+    table, th, td {
+        border: 1px solid rgb(189, 189, 189);
+    }
+    th, td {
+        padding: 10px;
+    }
+    
+    #StyloSelecaoEstado .state:hover { fill: rgb(197, 197, 197); }
+
+    body{
+        font-family: "Arial", sans-serif;
+        font-size: 14px;
+    }
+
+    .TituloGrafico{
+        font-weight: bold;    
+        font-size: 14px;
+        font-family:   Arial, Helvetica, Sans-Serif;
+    }
+
+    .toolTip {
+        position: absolute;
+        width: 100px;
+        height: auto;
+        padding: 10px;
+        background-color: white;
+        -webkit-border-radius: 10px;
+        -moz-border-radius: 10px;
+        border-radius: 10px;
+        -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        pointer-events: none;
+    }
+
+    line {
+        fill: none;
+        stroke: steelblue;
+        stroke-width: 1px;
+    }
+
+    .grid line {
+        stroke: lightgrey;
+        stroke-opacity: 0.7;
+        shape-rendering: crispEdges;
+    }
+
+    .grid path {
+        stroke-width: 0;
+    }
+
+    .tblPrincipalTituloTopo
+    {
+        text-align: left; 
+        vertical-align: bottom;
+        color: #ffffff; 
+        height: 14px;    
+        font-size: 15px;
+        font-family:  Verdana, Arial, Helvetica, Sans-Serif;
+        width:1000px; 
+        height:16px; 
+        background: #005075;
+    }
+
+    .tblPrincipalTitulo
+    {
+        text-align: center; 
+        color: #000000; 
+        font-size: 12px;
+        font-weight: bold;
+        font-family:  Verdana, Arial, Helvetica, Sans-Serif;
+      
+    }
+
+  </style>
+
+<script>
+
+//Aluno: Gerson Lima Serejo
+//Disciplina: VISUALIZACAO DA INFORMACAO - TP2
+
+//REFERÊNCIAS
+//https://d3js.org/
+//https://observablehq.com/@d3/gallery
+//https://github.com/d3/d3/blob/master/API.md
+//https://bl.ocks.org/ppKrauss/0c33364240e841fa23e78b21005f792c
+//https://www.d3-graph-gallery.com/graph/barplot_stacked_basicWide.html
+//https://www.d3-graph-gallery.com/graph/barplot_stacked_basicWide.html
+//https://observablehq.com/@stefanreifenberg/basic-stacked-bar-chart-from-the-d3-js-gallery
+//https://bl.ocks.org/fabiomainardi/00fd581dc5ba92d99eec
+//https://www.tutorialsteacher.com/d3js/create-bar-chart-using-d3js
+//http://bl.ocks.org/ndobie/90ae9f1a5c7f88ad4929
+//https://www.d3-graph-gallery.com/graph/treemap_basic.html
+//https://www.d3-graph-gallery.com/graph/treemap_custom.html
+//https://www.d3-graph-gallery.com/graph/custom_legend.html
+
+//----------GRÁFICO 1-----------------------------
+function grafico1(data){
+    
+    //Dimensões do gráfico
+    let margin = {top: 20, right: 10, bottom: 10, left: 10};
+    let width = 600 - margin.left - margin.right;
+    let height = 350 - margin.top - margin.bottom;
+
+    let svg = d3.select("#map1")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform","translate(" + margin.left + "," + margin.top + ")");
+
+    let root = d3.stratify()
+        .id(function(d) { return d.UF; })  
+        .parentId(function(d) { return d.parent; })  
+        (data);
+        root.sum(function(d) { return +d.value })   
+        console.log(root)
+
+    d3.treemap()
+        .size([width, height])
+        .padding(2)
+        (root)
+
+    //Criação do Tooltip
+    let tooltip = d3.select("#div_template")
+        .append("div")
+        .style("opacity", 0)
+        .attr("class", "toolTip")
+        .style("background-color", "white")
+        .style("border", "solid")
+        .style("border-width", "1px")
+        .style("border-radius", "5px")
+        .style("padding", "5px")
+        .style("font-size", "12px")
+        .style("font-family", "Arial, Helvetica, Sans-Serif");
+
+    let mouseover = function(d) {
+        tooltip
+        .style("opacity", 1)
+        d3.select(this)
+        .style("stroke", "black")
+    }
+
+    let mousemove = function(event, d) {
+        tooltip
+        .html("UF: <b>" + d.data.UF+ "</b><br>" 
+        + "ICM: " + d.data.ICM +"<br>"
+        + "ICP: " + d.data.ICP +"<br>" 
+        + "ICC: " + d.data.ICC +"<br>"+ "Qtd. Rodovias: " 
+        + d.data.Qtd_Rodovia + "<br>" + "Extesão: " 
+        + d.data.value+" Km")
+        .style("left", (d3.pointer(event)[0]+70) + "px")
+        .style("top", (d3.pointer(event)[1]) + "px")
+    }
+
+    let mouseleave = function(d) {
+        tooltip
+        .style("opacity", 0)
+        d3.select(this)
+        .style("stroke", "none")
+    }
+
+    let mousedown = function(event, d) {
+        Estado=d.data.UF;
+        grafico2(dataGlobal2, Estado);
+        grafico3(dataGlobal3, Estado);
+        grafico4(dataGlobal4, Estado);
+        console.log(Estado)
+    }
+
+    let color = d3.scaleOrdinal()
+        //.range(["#331c54"])
+        .range(["#005075"])
+        
+
+    let opacity = d3.scaleLinear()
+        .domain([100, 3800])
+        .range([.5,1])
+
+    //Título do grafico
+    svg.append()
+        .attr("class", "TituloGrafico")
+        .attr("x", width/2)
+        .attr("y", 1)
+        .attr('text-anchor', 'middle')
+        .text('Indicadores da qualidade pelo número de rodovias e extensão (Nov/Dez-2020).')
+
+    svg.selectAll("rect")
+        .data(root.leaves())
+        .enter()
+        .append("rect")
+        .attr('x', function (d) { return d.x0; })
+        .attr('y', function (d) { return d.y0; })
+        .attr('width', function (d) { return d.x1 - d.x0; })
+        .attr('height', function (d) { return d.y1 - d.y0; })
+        .style("fill", function(d){ return color(d.UF)} )
+        .style("opacity", function(d){ return opacity(d.value)})
+        .on("mouseover", mouseover)
+        .on("mousemove", mousemove)
+        .on("mouseleave", mouseleave)
+        .on("mousedown", mousedown)
+
+    svg.selectAll("text")
+        .data(root.leaves())
+        .enter()
+        .append("text")
+        .attr("x", function(d){ return d.x0})    
+        .attr("y", function(d){ return d.y0+9})    
+        .text(function(d){ return d.data.UF})
+        .attr("font-size", "11px")
+        .attr("fill", "white")
+        .attr("font-family", "Arial, Helvetica, Sans-Serif");
+
+    //Legenda dos índices
+    svg.append('rect')
+        .attr('x', width-330)
+        .attr('y', -15)
+        .attr('width', 30)
+        .attr('height', 14)
+        .attr('fill', '#bbd6e2');
+
+    svg.append('rect')
+        .attr('x', width-300)
+        .attr('y', -15)
+        .attr('width', 30)
+        .attr('height', 14)
+        .attr('fill', '#005075');
+    
+    svg.append("text")
+        .attr("x", width-268)
+        .attr("y", -8)
+        .text("3800(Km)")
+        .style("font-size", "13px")
+        .attr("alignment-baseline","middle")
+    
+    svg.append("text")
+        .attr("x", width-435)
+        .attr("y", -8)
+        .text("Extensão: 100")
+        .style("font-size", "13px")
+        .attr("alignment-baseline","middle")
+}
+
+//----------GRÁFICO 2-----------------------------
+function grafico2(dataCompleto, Estado){
+
+    //Atribuir os dados global aos dados locais
+    dataGlobal2 = dataCompleto
+    let arquivos = dataCompleto
+
+    //Dimensões do gráfico
+    let width=596, height=350, svg, g, path;
+
+    svg = d3.select("#map2")
+        .attr("width",  width)
+        .attr("height", height);
+
+    g = svg.append("g")
+    
+    g.attr("id","StyloSelecaoEstado");
+
+    let projection = d3.geoMercator()
+        .scale(480)
+        .center([-52, -14])
+        .translate([width / 2 + 18, height / 2 + 2]);
+
+    path = d3.geoPath().projection(projection);
+
+    let DadosMapa = topojson.feature(arquivos[0], arquivos[0].objects.estados);
+    let DadosDNIT = arquivos[1];
+    
+    //Legenda dos índices
+    svg.append('rect')
+        .attr('x', width-120)
+        .attr('y', 20)
+        .attr('width', 30)
+        .attr('height', 14)
+        .attr('fill', '#bbd6e2');
+
+    svg.append('rect')
+        .attr('x', width-90)
+        .attr('y', 20)
+        .attr('width', 30)
+        .attr('height', 14)
+        .attr('fill', '#005075');
+
+    svg.append("text")
+        .attr("x", width-179)
+        .attr("y", 28).
+        text("ICM: 10")
+        .style("font-size", "13px")
+        .attr("alignment-baseline","middle")
+    
+    svg.append("text")
+        .attr("x", width-58)
+        .attr("y", 28)
+        .text("50")
+        .style("font-size", "13px")
+        .attr("alignment-baseline","middle")
+    
+
+    let color = d3.scaleLinear(d3.extent(DadosDNIT, function(d){return +d.ICM}), ["#005075", "#a3e3ff"]);
+    
+    g.selectAll(".estado")
+        .data(DadosMapa.features)
+        .enter()
+        .append("path")
+        .attr("class", "state")
+        .attr("stroke", "black")
+        .attr("fill", function (d,i){
+            
+        if(d.id == Estado){
+            return "#e22b4a";
+        }else{
+            let filtrosEstado = DadosDNIT.filter(function(i){ return i.UF == d.id})
+            if(filtrosEstado.length==1){ 
+                return color(+filtrosEstado[0].ICM) 
+            }
+        }
+        }).attr("d", path)
+        .on("mousedown", function(e,d){ 
+            Estado=d.id;
+            grafico2(dataGlobal2, Estado);
+            grafico3(dataGlobal3, Estado);
+            grafico4(dataGlobal4, Estado);
+            console.log(Estado)
+
+            //if(dataGlobal4!=""){
+            //    d3.select("#Erro").append("div")
+             //   .text("Hello, world!");
+           // }
+        });        
+}
+
+//----------GRÁFICO 3-----------------------------
+function grafico3(dataCompleto, Estado){
+    
+    //Atribuir os dados global aos dados locais
+    dataGlobal3 = dataCompleto
+    var data = []
+    if(Estado){
+        data = dataCompleto.filter(function(d){ return d.UF==Estado})
+        data.columns = dataCompleto.columns
+    }else{
+        data = dataCompleto
+    }
+
+   if(data!=""){
+    
+        //Dimensões do gráfico
+    let margin = {top: 20, right: 30, bottom: 40, left: 50};
+    let width = 600 - margin.left - margin.right;
+    let height = 350 - margin.top - margin.bottom;
+
+    //Redesenhar o gráfico ao selecionar um novo estado
+    d3.select("#map3")
+        .select("svg")
+        .remove();
+
+    let svg = d3.select("#map3")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform","translate(" + margin.left + "," + margin.top + ")");
+
+    //Lista os subgrupos do banco de dados    
+    let SubGrupos = data.columns.slice(1,4)
+    console.log(SubGrupos)
+
+    //Selecionar a coluna chave para o agrupamento
+    let Agrupar = d3.map(data, d => d.UF);     
+    console.log(Agrupar)
+
+    // adicionar o eixo X
+    let x = d3.scaleBand()
+        .domain(Agrupar)
+        .range([0, width])
+        .padding([0.2])
+        svg.append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(x).tickSize(0));
+
+    // Adicionar o eixo Y
+    let y = d3.scaleLinear()
+        .domain([0, 60])
+        .range([ height, 0 ]);
+        svg.append("g")
+        .call(d3.axisLeft(y));
+
+    //Uma escala para a posição do subgrupo
+    var xSubgroup = d3.scaleBand()
+        .domain(SubGrupos)
+        .range([0, x.bandwidth()])
+        .padding([0.05])
+
+    //Paleta de cores para a lista de 
+    var color = d3.scaleOrdinal()
+        .domain(SubGrupos)
+        //.range(['#d53e4f','#fdae61','#66c2a5'])
+        .range(['#005075','#0092d7','#24b8fe'])
+          
+
+    //Grade de visualização em Y
+    function make_y_gridlines() {		
+        return d3.axisLeft(y)
+        .ticks(5)
+    }
+
+    svg.append("g")			
+        .attr("class", "grid")
+        .call(make_y_gridlines()
+        .tickSize(-width)
+        .tickFormat("")
+    )
+    //Título do grafico
+    svg.append('text')
+        .attr("class", "TituloGrafico")
+        .attr("x", width/2)
+        .attr("y", -4)
+        .attr('text-anchor', 'middle')
+        .text('Indicadores da qualidade das rodovias por estado (Nov/Dez-2020).')
+
+    //Legenda dos índices
+    svg.append('rect')
+        .attr('x', width-12)
+        .attr('y', 31)
+        .attr('width', 14)
+        .attr('height', 14)
+        .attr('fill', '#005075');
+
+    svg.append('rect')
+        .attr('x', width-12)
+        .attr('y', 51)
+        .attr('width', 14)
+        .attr('height', 14)
+        .attr('fill', '#0092d7');
+    
+    svg.append('rect')
+        .attr('x', width-12)
+        .attr('y', 71)
+        .attr('width', 14)
+        .attr('height', 14)
+        .attr('fill', '#24b8fe');
+
+    svg.append("text")
+        .attr("x", width+5)
+        .attr("y", 40).text("ICM")
+        .style("font-size", "13px")
+        .attr("alignment-baseline","middle")
+    
+    svg.append("text")
+        .attr("x", width+5)
+        .attr("y", 60).text("ICP")
+        .style("font-size", "13px")
+        .attr("alignment-baseline","middle")
+    
+    svg.append("text")
+        .attr("x", width+5)
+        .attr("y", 80).text("ICC")
+        .style("font-size", "13px")
+        .attr("alignment-baseline","middle")
+        
+    //Legenda do eixo y
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(y)
+        .append("text")
+        .style("font-size", "15px")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -40)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Qualidade das rodovias");
+    
+    //Legenda do eixo x
+    svg.append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .append("text")
+        .style("font-size", "15px")
+        .attr("y", 25)
+        .attr("x", width )
+        .attr("text-anchor", "end")
+        .text(
+            function(d) {
+            if(Estado){
+                return "Unidades federativas do Brasil ("+Estado+")";
+            }else{
+                return "Unidades federativas do Brasil (UF)";
+            }
+        }
+    );
+
+    //Mostrar o gráfico de barras
+    svg.append("g")
+    .selectAll("g")
+        .data(data)
+        .enter()
+        .append("g")
+        .attr("transform", function(d) { return "translate(" + x(d.UF) + ",0)"; })
+    .selectAll("rect")
+        .data(function(d) { return SubGrupos.map(function(key) { return {key: key, value: d[key]}; }); })
+        .enter().append("rect")
+        .attr("x", function(d) { return xSubgroup(d.key); })
+        .attr("y", function(d) { return y(d.value); })
+        .attr("width", xSubgroup.bandwidth())
+        .attr("height", function(d) { return height - y(d.value); })
+        .attr("fill", function(d) { return color(d.key); });
+    }else{
+        //Redesenhar o gráfico ao selecionar um novo estado
+        d3.select("#map3")
+           .select("svg")
+           .remove();
+
+    }
+}
+    
+//----------GRÁFICO 4-----------------------------
+function grafico4(dataCompleto, Estado){
+    
+    //Atribuir os dados global aos dados locais
+    dataGlobal4 = dataCompleto
+    var data = []
+    if(Estado){
+        data = dataCompleto.filter(function(d){ return d.UF==Estado})
+        data.columns = dataCompleto.columns
+    }else{
+        data = ""
+    }
+    
+    if(data!="" && Estado!=""){
+       
+    //Dimensões do gráfico
+    let margin = {top: 20, right: 30, bottom: 40, left: 50};
+    let width = 600 - margin.left - margin.right;
+    let height = 350 - margin.top - margin.bottom;
+
+    //Redesenhar o gráfico ao selecionar um novo estado
+    d3.select("#map4")
+        .select("svg")
+        .remove();
+
+    let svg = d3.select("#map4")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform","translate(" + margin.left + "," + margin.top + ")");
+        
+    //Lista os subgrupos do banco de dados    
+    let SubGrupos = data.columns.slice(2,5);
+        console.log(SubGrupos)
+    
+    //Selecionar a coluna chave para o agrupamento
+    let Agrupar = d3.map(data, d => d.Rodovia);
+        console.log(Agrupar)
+    
+    // adicionar o eixo X
+    let x = d3.scaleBand()
+        .domain(Agrupar)
+        .range([0, width])
+        .padding([0.2])
+        svg.append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(x).tickSize(0));
+        
+    // Adicionar o eixo Y
+    let y = d3.scaleLinear()
+        .domain([0, 100])
+        .range([ height, 0 ]);
+        svg.append("g")
+        .call(d3.axisLeft(y));
+
+    //Uma escala para a posição do subgrupo
+    let xSubgroup = d3.scaleBand()
+        .domain(SubGrupos)
+        .range([0, x.bandwidth()])
+        .padding([0.05])
+
+    //Paleta de cores para a lista de 
+    var color = d3.scaleOrdinal()
+        .domain(SubGrupos)
+        .range(['#4154e3','#01b8aa','#8ad4eb'])
+        //.range(['#2ca02c','#ff7f0e','#1f77b4'])
+
+    //Grade de visualização em Y
+    function make_y_gridlines() {		
+        return d3.axisLeft(y)
+        .ticks(5)
+    }
+
+    svg.append("g")			
+        .attr("class", "grid")
+        .call(make_y_gridlines()
+        .tickSize(-width)
+        .tickFormat("")
+    )
+
+    //Título do grafico
+    svg.append('text')
+    .attr("class", "TituloGrafico")
+        .attr("x", width/2)
+        .attr("y", -4)
+        .attr('text-anchor', 'middle')
+        .text('Indicadores da qualidade das rodovias (Nov/Dez-2020).')
+
+    //Legenda dos índices
+    svg.append('rect')
+        .attr('x', width-8)
+        .attr('y', 31)
+        .attr('width', 14)
+        .attr('height', 14)
+        .attr('fill', '#4154e3');
+
+    svg.append('rect')
+        .attr('x', width-8)
+        .attr('y', 51)
+        .attr('width', 14)
+        .attr('height', 14)
+        .attr('fill', '#01b8aa');
+    
+    svg.append('rect')
+        .attr('x', width-8)
+        .attr('y', 71)
+        .attr('width', 14)
+        .attr('height', 14)
+        .attr('fill', '#8ad4eb');
+
+    svg.append("text")
+        .attr("x", width+8)
+        .attr("y", 40).text("ICM")
+        .style("font-size", "13px")
+        .attr("alignment-baseline","middle")
+    
+    svg.append("text")
+        .attr("x", width+8)
+        .attr("y", 60).text("ICP")
+        .style("font-size", "13px")
+        .attr("alignment-baseline","middle")
+    
+    svg.append("text")
+        .attr("x", width+8)
+        .attr("y", 80).text("ICC")
+        .style("font-size", "13px")
+        .attr("alignment-baseline","middle")
+    
+    //Legenda do eixo y
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(y)
+        .append("text")
+        .style("font-size", "15px")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -40)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Qualidade das Rodovias");
+    
+    //Legenda do eixo x
+    svg.append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .append("text")
+        .style("font-size", "15px")
+        .attr("y", 25)
+        .attr("x", width )
+        .attr("text-anchor", "end")
+        .text("Rodovias por Unidades federativas do Brasil ("+Estado+")");
+
+    //Mostrar o gráfico de barras
+    svg.append("g")
+    .selectAll("g")
+        .data(data)
+        .enter()
+        .append("g")
+        .attr("transform", function(d) { return "translate(" + x(d.Rodovia) + ",0)"; })
+    .selectAll("rect")
+        .data(function(d) { return SubGrupos.map(function(key) { return {key: key, value: d[key]}; }); })
+        .enter().append("rect")
+        .attr("x", function(d) { return xSubgroup(d.key); })
+        .attr("y", function(d) { return y(d.value); })
+        .attr("width", xSubgroup.bandwidth())
+        .attr("height", function(d) { return height - y(d.value); })
+        .attr("fill", function(d) { return color(d.key); });
+    }else{
+        //Redesenhar o gráfico ao selecionar um novo estado
+        d3.select("#map4")
+            .select("svg")
+            .remove();
+
+            if(data=="" && Estado!=""){
+              //  d3.select("#Erro").append("div")
+               // .text("Hello, world!");
+            }else{
+                d3.select("#Erro")
+                .select("div")
+                .remove();
+
+            }
+
+
+    }
+}
+
+</script>
+
+</head>
+
+<body  style="background: #F3F3F5; margin: 0; padding: 0;">
+   
+    <div id = "svgcontainer"></div>
+  
+  <table cellspacing="0px" cellpadding="0px" style="height: 100px; width: 1300px; margin: 0 auto;background-color:white;padding:0;border:0">
+  <!-----Topo----->
+  <tr>
+  <td  class="tblPrincipalTituloTopo">
+    <b>DNIT</b> - Departamento Nacional de Infraestrutura de Transportes (2020)
+
+  </td>
+
+  <!-----Conteúdo----->
+	<tr>
+        <td style="text-align:left;vertical-align:top; width: 1000px; height: 600px;" >
+          
+          <table  >
+              <tr>
+                <td class="tblPrincipalTitulo">
+                    <b>Indicadores da qualidade pelo número e extensão das rodovias (Nov/Dez-2020).</b>
+                    <svg id="map1" height="350" width="600" ></svg>
+                    <button id="b1">
+                        Limpar filtros
+                    </button>
+                    Clique no gráfico para selecionar um estado.
+                </td>
+                  <td class="tblPrincipalTitulo">
+                    Indicadores da qualidade das rodovias por estados (Nov/Dez-2020).
+                      <svg id="map2" height="400" width="600"></svg>
+                      <button id="b2">
+                        Limpar filtros
+                      </button>
+                      Clique no gráfico para selecionar um estado.
+                    </td>
+              </tr>
+              <tr>
+                <td>
+                    <div id="div_template"></div>
+                    <svg id="map3" height="350" width="600"></svg>
+                </td>
+                  <td>
+                    <svg id="map4" height="350" width="600"></svg>
+                    <div id="Erro" ></div>
+                  </td>
+                 
+              </tr>
+          </table>            
+        </td>
+        
+ 	</tr>
+
+  <!-----Rodapé----->
+	<tr>
+	  <td class="tblPrincipalTitulo" valign="top" align="center">
+          	Gerson Lima Serejo.
+          </td>
+	</tr>
+    </table>		
+    
+</body>
+
+<script>
+    
+    //Carrega os dados de forma global 
+    let dataGlobal2 = [];
+    let dataGlobal3 = [];
+    let dataGlobal4 = [];
+
+     //-------Grafico 1--------
+    d3.csv("https://raw.githubusercontent.com/gerson-serejo/DNIT/main/icm9.csv")
+        .then(grafico1)
+        .catch(function(err){console.log(err)
+    });
+
+    //-------Grafico 2--------
+    Promise.all([
+        d3.json("https://raw.githubusercontent.com/gerson-serejo/DNIT/main/br-states.json"),
+        d3.csv("https://raw.githubusercontent.com/gerson-serejo/DNIT/main/icm6.csv")
+    ]).then(grafico2)
+    .catch(function(err){console.log(err)});
+
+    //-------Grafico 3--------
+    d3.csv("https://raw.githubusercontent.com/gerson-serejo/DNIT/main/icm6.csv")
+        .then(grafico3)
+        .catch(function(err){console.log(err)
+    });
+
+    //-------Grafico 4--------
+    d3.csv("https://raw.githubusercontent.com/gerson-serejo/DNIT/main/icm7.csv")
+        .then(grafico4)
+        .catch(function(err){console.log(err)
+    });
+
+    //-------Botão Limpa Filtros--------
+    d3.select("#b1").on("mousedown", function(e,d){ 
+        grafico2(dataGlobal2, "");
+        grafico3(dataGlobal3, "");
+        grafico4(dataGlobal4, "");
+    })
+
+    d3.select("#b2").on("mousedown", function(e,d){ 
+        grafico2(dataGlobal2, "");
+        grafico3(dataGlobal3, "");
+        grafico4(dataGlobal4, "");
+    })
+
+
+   
+</script>
+
+</html>
